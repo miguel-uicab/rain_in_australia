@@ -3,6 +3,8 @@
 
 import pandas as pd
 import numpy as np
+import plotly.express as px
+from sklearn.feature_selection import mutual_info_classif
 
 
 def get_count_missing(data=None, feature_names=None):
@@ -74,3 +76,41 @@ def fillna_categoric_data(data=None, list_names=None):
         data_copy[name].fillna('Unidentified', inplace=True)
 
     return data_copy
+
+
+def mutual_information_score(data=None,
+                             feature_names=None,
+                             y_label_name=None,
+                             list_bool_True=None,
+                             seed=5000):
+    """
+    Calcula la información mutua dependiendo de si las
+    variables son numérica o booleanas.
+    El resultado es un histograma con los valores de 
+    información mutua en orden descendente y un dataframe con
+    la información.
+    """
+    X_features = data[feature_names]
+    y_labels = data[y_label_name]
+    if list_bool_True:
+        mi = mutual_info_classif(X=X_features,
+                                    y=y_labels,
+                                    discrete_features=list_bool_True,
+                                    random_state=seed)
+    else:
+        mi = mutual_info_classif(X=X_features,
+                                 y=y_labels,
+                                 random_state=seed)
+    mutual = pd.DataFrame({'features': list(X_features.columns),
+                           'mutual_info': list(mi)})
+    mutual.sort_values(by='mutual_info',
+                       ascending=False,
+                       inplace=True,
+                       ignore_index=True)
+    fig = px.bar(mutual,
+                 x='features',
+                 y='mutual_info',
+                 color='mutual_info')
+    fig.show()
+
+    return mutual
