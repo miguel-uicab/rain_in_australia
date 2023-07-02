@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import pickle
 # import plotly.express as px
-#import plotly.figure_factory as ff
+# import plotly.figure_factory as ff
 # import shap
 import datetime
 import logging
@@ -136,8 +136,10 @@ def get_preprocessor(model_name=None, float_names=None,
     Ver función "get_feature_names_order" para saber cómo queda el
     orden de estas variables de acuerdo el modelo de machine learning elegido.
     """
-    numeric_transformer = Pipeline(steps=[('imputer', KNNImputer(n_neighbors=5, weights="uniform"))])
-    categorical_transformer = Pipeline(steps=[('CountEncoder', CountEncoder(normalize=True))])
+    numeric_transformer = Pipeline(
+        steps=[('imputer', KNNImputer(n_neighbors=5, weights="uniform"))])
+    categorical_transformer = Pipeline(
+        steps=[('CountEncoder', CountEncoder(normalize=True))])
     if model_name == 'HistGradientBoostingClassifier':
         preprocessor = ColumnTransformer(remainder='passthrough',
                                          transformers=[('categorical', categorical_transformer, categorical_names)])
@@ -159,7 +161,8 @@ def get_feature_importances(model_name=None, feature_names_order=None,
     """
     if model_name == 'HistGradientBoostingClassifier':
         x_Test = clf_final.named_steps['processing'].transform(X_test)
-        explainer = shap.Explainer(clf_final.named_steps["estimator"].predict_proba, x_Test)
+        explainer = shap.Explainer(
+            clf_final.named_steps["estimator"].predict_proba, x_Test)
         shap_test = explainer(x_Test)
         len_features = shap_test.values[0].shape[0]
         len_X_test = X_test.shape[0]
@@ -169,12 +172,14 @@ def get_feature_importances(model_name=None, feature_names_order=None,
             for i in range(0, len_features):
                 ind_sp_values_list.append(shap_test.values[j][i][1])
             sp_values_list.append(ind_sp_values_list)
-            pd_shape = pd.DataFrame(sp_values_list, columns=list(X_test.columns))
+            pd_shape = pd.DataFrame(
+                sp_values_list, columns=list(X_test.columns))
             pd_f_i = abs(pd_shape).mean().to_frame()
             pd_f_i.reset_index(drop=False, inplace=True)
             pd_f_i.columns = ['feature_names', 'feature_importances']
     else:
-        feature_importances = list(clf_final._final_estimator.feature_importances_)
+        feature_importances = list(
+            clf_final._final_estimator.feature_importances_)
         pd_f_i = pd.DataFrame({'feature_names': feature_names_order,
                                'feature_importances': feature_importances})
     pd_f_i.sort_values(by='feature_importances',
@@ -192,7 +197,7 @@ def get_feature_importances(model_name=None, feature_names_order=None,
 
 
 def density_prob(probabilities=None,
-                 name_probability=None,          
+                 name_probability=None,
                  objective_name=None,
                  ratio_balance=None,
                  bin_size=None,
@@ -208,8 +213,9 @@ def density_prob(probabilities=None,
     fig.write_html(f'{path}{save_name_density}.html')
 
 
-def get_feature_names_order(model_name=None, float_names=None,
-                            categorical_names=None, int_names=None):
+def get_feature_names_order(model_name=None,
+                            float_names=None,
+                            categorical_names=None):
     """
     Debido al uso de tuberías de procesos, el orden de las variables importa.
     Este orden en las variables esta vínculado al orden en que suceden los
@@ -224,9 +230,11 @@ def get_feature_names_order(model_name=None, float_names=None,
         3. Tipo enteras.
     """
     if model_name == 'HistGradientBoostingClassifier':
-        feature_names_order = categorical_names+float_names+int_names
+        feature_names_order = categorical_names+float_names
+        # feature_names_order = categorical_names+float_names+int_names
     else:
-        feature_names_order = float_names+categorical_names+int_names
+        feature_names_order = float_names+categorical_names
+        # feature_names_order = float_names+categorical_names+int_names
 
     return feature_names_order
 
@@ -306,7 +314,8 @@ def optimization_model(name_sav=None,
                                     categorical_names=categorical_names)
     estimator = select_model(model_name=model_name)
     transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(random_state=seed, sampling_strategy=ratio_balance)),
+                                ("RandomUnderSampler", RandomUnderSampler(
+                                    random_state=seed, sampling_strategy=ratio_balance)),
                                 ("estimator", estimator())])
 
     # Configuración para CV y Search #####################################
@@ -398,7 +407,6 @@ def training_model(best_hyper_info=None,
                                                         test_size=test_size,
                                                         stratify=label)
 
-
     # Tuberias para Procesamiento y Muestreo #############################
     logging.info('TUBERÍAS PARA PROCESAMIENTO Y MUESTREO.')
     preprocessor = get_preprocessor(model_name=model_name,
@@ -406,15 +414,16 @@ def training_model(best_hyper_info=None,
                                     categorical_names=categorical_names)
     estimator = select_model(model_name=model_name)
     transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(random_state=seed, sampling_strategy=ratio_balance)),
+                                ("RandomUnderSampler", RandomUnderSampler(
+                                    random_state=seed, sampling_strategy=ratio_balance)),
                                 ("estimator", estimator())])
-
 
     # Ajuste Final ###########################################################
     logging.info('AJUSTE FINAL.')
     best_param = best_hyper_info['hyperparameters']
     transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(random_state=seed, sampling_strategy=ratio_balance)),
+                                ("RandomUnderSampler", RandomUnderSampler(
+                                    random_state=seed, sampling_strategy=ratio_balance)),
                                 ("estimator", estimator(**best_param))])
     clf = transform.fit(X_train, y_train)
     clf.score(X_test, y_test)
@@ -470,7 +479,7 @@ def training_model(best_hyper_info=None,
                                                       path=path, objective_name=objective_name,
                                                       ratio_balance=ratio_balance)
         name_feature_importances = f'final_feature_importances_{objective_name}_{ratio_balance}.sav'
-        save_name=f'{path}{name_feature_importances}'
+        save_name = f'{path}{name_feature_importances}'
         pickle.dump(feature_importances, open(save_name, 'wb'))
 
     if save_data_train_test:
@@ -486,7 +495,6 @@ def training_model(best_hyper_info=None,
         save_name_test = f'{path}data_test.sav'
         pickle.dump(merge_train, open(save_name_train, 'wb'))
         pickle.dump(merge_test, open(save_name_test, 'wb'))
-    
 
     logging.info('FIN DE AJUSTE FINAL.')
 
