@@ -4,19 +4,17 @@
 import pandas as pd
 import numpy as np
 import pickle
-# import plotly.express as px
-# import plotly.figure_factory as ff
-# import shap
+import plotly.express as px
+import plotly.figure_factory as ff
+import shap
 import datetime
 import logging
 import yaml
 from sklearn.impute import KNNImputer
-from sklearn.metrics import recall_score, precision_score, accuracy_score
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import recall_score, precision_score
 from sklearn.metrics import f1_score, matthews_corrcoef, confusion_matrix
-from sklearn.metrics import jaccard_score, roc_auc_score, average_precision_score
 from sklearn.metrics import make_scorer
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -43,7 +41,8 @@ def get_config():
     return config
 
 
-def get_data(name_sav=None, path=None):
+def get_data(name_sav=None,
+             path=None):
     """
     Retorna un DataFrame derivivado de un archivo csv.
     """
@@ -52,7 +51,8 @@ def get_data(name_sav=None, path=None):
     return name_sav
 
 
-def make_dictionary(key_list=None, value_list=None):
+def make_dictionary(key_list=None,
+                    value_list=None):
     """
     Dados dos listas, una de llaves y otra de valores, se encarga de
     elaborar un diccionario. Si en los valores aparece 'np.nan', este es
@@ -64,7 +64,8 @@ def make_dictionary(key_list=None, value_list=None):
     return dict_words_to_replace
 
 
-def correct_name_keys(dictionary=None, word=None):
+def correct_name_keys(dictionary=None,
+                      word=None):
     """
     Elimina palabras indeseables en los nombres de los hiperparámetros del
     modelo elegido, esto posterior al proceso de optimización del modelo.
@@ -95,7 +96,8 @@ def select_model(model_name=None):
     return estimator
 
 
-def hyper_space(model_name=None, random_state=None):
+def hyper_space(model_name=None,
+                random_state=None):
     """
     Selección del espacio hiperparametral dependiendo del
     modelo de machine learning.
@@ -118,10 +120,11 @@ def hyper_space(model_name=None, random_state=None):
     return space
 
 
-def get_preprocessor(model_name=None, float_names=None,
+def get_preprocessor(model_name=None,
+                     float_names=None,
                      categorical_names=None):
     """
-    Selección de los procesos que irán en tuberías para que sean tomados
+    Selección de los procesos que irán en Pipilines para que sean tomados
     en cuenta en los procesos de Cross-Validation. Estos procesos son pasados
     a variables Numéricas y Categóricas.
         1. Procesos para variables numéricas: Imputador. Este proceso no se
@@ -136,10 +139,8 @@ def get_preprocessor(model_name=None, float_names=None,
     Ver función "get_feature_names_order" para saber cómo queda el
     orden de estas variables de acuerdo el modelo de machine learning elegido.
     """
-    numeric_transformer = Pipeline(
-        steps=[('imputer', KNNImputer(n_neighbors=5, weights="uniform"))])
-    categorical_transformer = Pipeline(
-        steps=[('CountEncoder', CountEncoder(normalize=True))])
+    numeric_transformer = Pipeline(steps=[('imputer', KNNImputer(n_neighbors=3, weights="uniform"))])
+    categorical_transformer = Pipeline(steps=[('CountEncoder', CountEncoder(normalize=True))])
     if model_name == 'HistGradientBoostingClassifier':
         preprocessor = ColumnTransformer(remainder='passthrough',
                                          transformers=[('categorical', categorical_transformer, categorical_names)])
@@ -151,9 +152,13 @@ def get_preprocessor(model_name=None, float_names=None,
     return preprocessor
 
 
-def get_feature_importances(model_name=None, feature_names_order=None,
-                            clf_final=None, X_test=None, path=None,
-                            objective_name=None, ratio_balance=None):
+def get_feature_importances(model_name=None,
+                            feature_names_order=None,
+                            clf_final=None,
+                            X_test=None,
+                            path=None,
+                            objective_name=None,
+                            ratio_balance=None):
     """
     Cálcula las importancias de las variables después del ajuste del modelo.
     1. Para modelo HistGradientBoostingClassifier: se usa shap-values.
@@ -217,7 +222,7 @@ def get_feature_names_order(model_name=None,
                             float_names=None,
                             categorical_names=None):
     """
-    Debido al uso de tuberías de procesos, el orden de las variables importa.
+    El uso de Pipilines implica que el orden de las variables importa.
     Este orden en las variables esta vínculado al orden en que suceden los
     procesos en las tuberías (ver función "get_preprocessor")
     * Orden de variables en el modelo HistGradientBoostingClassifier:
@@ -239,13 +244,13 @@ def get_feature_names_order(model_name=None,
     return feature_names_order
 
 
-def optimization_model(name_sav=None,
+def optimization_model(name_train_sav=None,
+                       name_test_sav=None,
                        features_names=None,
                        objective_name=None,
                        model_name=None,
                        seed=None,
                        ratio_balance=None,
-                       test_size=None,
                        k_folds=None,
                        verbose=None,
                        optimized_metric=None,
@@ -274,17 +279,29 @@ def optimization_model(name_sav=None,
       la información de la mejor combinación de hiperparámetros.
     """
     logging.info('PROCESO DE OPTIMIZACIÓN.')
-    # Configuración de data ##################################################
-    logging.info('CONFIGURACIÓN DE DATA.')
+    # Carga de datas #########################################################
+    # df_train = get_data(name_sav='wA_train.sav', path=path)
+    # df_test = get_data(name_sav='wA_test.sav', path=path)
+    df_train = get_data(name_sav=name_train_sav, path=path)
+    df_test = get_data(name_sav=name_test_sav, path=path)
+    
+    
+    # Configuraciones Generales ##################################################
+    logging.info('CONFIGURACIÓN GENERALES.')
+    # Se obtiene el dataset de features en el conjunto de __Entrenamiento__
     original_data = get_data(name_sav=name_sav, path=path)
     data = original_data[features_names]
+    
+    
+    
+    
     float_names = list(data.select_dtypes(include='float64').columns)
     categorical_names = list(data.select_dtypes(include='object').columns)
-    int_names = list(data.select_dtypes(include='int').columns)
+    # int_names = list(data.select_dtypes(include='int').columns)
     feature_names_order = get_feature_names_order(model_name=model_name,
                                                   float_names=float_names,
                                                   categorical_names=categorical_names,
-                                                  int_names=int_names)
+                                                  int_names=None)
     features = data[feature_names_order]
     label = original_data[objective_name]
 
