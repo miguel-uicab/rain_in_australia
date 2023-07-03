@@ -33,7 +33,7 @@ El modelo de ML asociado es uno que trata un problema de clasificación binaria.
 
 Para entender las decisiones y procesos llevados a cabo para el desarrollo del modelo de ML, así como las características y métricas finales asociadas al mismo, hay que consultar los jupyter noteboks contenidos en las diferentes carpetas. El orden en que deben consultarse estos archivos son:
 
-1. __exploratory_and_preprocessing/exploratory_analysis_and_preprocessing.ipynb__: Se lleva a cabo un análisis exploratorio de datos además de una primera etapa de preprocesamiento. Entre los procesos que se realizan están: análisis de la correlación, tratamiento de valores perdidos, selección de variables y guardado de los binarios contenedores de las datas de entrenamiento y de prueba.
+1. __exploratory_and_preprocessing/exploratory_analysis_and_preprocessing.ipynb__: Se divide en dos partes (dos jupyter notebooks). En ellas se lleva a cabo un análisis exploratorio de datos además de una primera etapa de preprocesamiento. Entre los procesos que se realizan están: análisis de la correlación, tratamiento de valores perdidos, selección de variables y guardado de los binarios contenedores de las datas de entrenamiento y de prueba.
 
 2. __training/model_selection.ipynb :__ En él se lleva a cabo una minicompetencia de modelos. Contiene importantes explicaciones de las consideraciones técnicas asociadas al entreamiento de un modelo de clasificación con un considerable desbalanceo entre sus clases.
 

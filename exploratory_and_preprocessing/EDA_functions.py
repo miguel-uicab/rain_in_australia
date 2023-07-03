@@ -3,8 +3,19 @@
 
 import pandas as pd
 import numpy as np
+import pickle
 import plotly.express as px
 from sklearn.feature_selection import mutual_info_classif
+
+
+def get_data(name_sav=None,
+             path=None):
+    """
+    Retorna un DataFrame derivivado de un archivo csv.
+    """
+    name_sav = pickle.load(open(f'{path}{name_sav}', 'rb'))
+
+    return name_sav
 
 
 def get_count_missing(data=None, feature_names=None):
