@@ -11,7 +11,7 @@ from sklearn.feature_selection import mutual_info_classif
 def get_data(name_sav=None,
              path=None):
     """
-    Retorna un DataFrame derivivado de un archivo csv.
+    Retorna un DataFrame derivado de un archivo binario.
     """
     name_sav = pickle.load(open(f'{path}{name_sav}', 'rb'))
 
@@ -80,7 +80,7 @@ def get_features_names_drop_by_corr(data=None,
 def fillna_categoric_data(data=None, list_names=None):
     """
     Dada una lista de variables categóricas, imputa, en los
-    valores perdidos, el valor de 'No identificado'.
+    valores perdidos, el valor de 'Unidentified'.
     """
     data_copy = data.copy()
     for name in list_names:

@@ -45,7 +45,7 @@ def get_config():
 def get_data(name_sav=None,
              path=None):
     """
-    Retorna un DataFrame derivivado de un archivo csv.
+    Retorna un DataFrame derivado de un archivo binario.
     """
     name_sav = pickle.load(open(f'{path}{name_sav}', 'rb'))
 
@@ -105,10 +105,10 @@ def hyper_space(model_name=None,
     """
     if model_name == 'HistGradientBoostingClassifier':
         space = {'estimator__random_state': [random_state],
-                 'estimator__max_iter': [100, 400],
-                 'estimator__max_leaf_nodes': [10],
-                 'estimator__min_samples_leaf': [10],
-                 'estimator__learning_rate': [0.1],
+                 'estimator__max_iter': [200, 400, 650, 700, 800],
+                 'estimator__max_leaf_nodes': [10, 70, 100, 150], 
+                 'estimator__min_samples_leaf': [10, 20, 30, 40],
+                 'estimator__learning_rate':  [0.05, 0.07, 0.1, 0.3, 0.5, 1],
                  'estimator__max_depth': [None, 1],
                  'estimator__l2_regularization': [0]}
     elif model_name == 'RandomForestClassifier':
@@ -279,6 +279,9 @@ def optimization_model(name_train_sav=None,
       Por defualt se tiene 'cv_f1'.
     * save_best_info: Booleano. Si o no se guarda un archivo .sav que contiene
       la información de la mejor combinación de hiperparámetros.
+    * path: String. Ubicación de los archivos de data.
+    OUTPUT: Dataframe con la información relevante del modelo que ha optimizado
+    la métrica dada por optimized_metric.
     """
     logging.info('PROCESO DE OPTIMIZACIÓN.')
     df_train = get_data(name_sav=name_train_sav, path=path)
@@ -379,6 +382,23 @@ def training_model(best_hyper_info=None,
                    with_feature_importances=None,
                    with_probability_density=None,
                    path=None):
+    """
+    Ajusta y guarda el modelo optimizado. Sus parámetros son:
+    * best_hyper_info: Es output derivado de la funcion optimization_model.
+    * name_train_sav: Nombre del archivo .sav de entrenamiento.
+    * name_test_sav: Nombre del archivo .sav de prueba.
+    * features_names: Lista de nombres de features a considerar.
+    * model_name: String. Selección del nombre del estimador.
+      Por el momento solo hay dos opciones, 'HistGradientBoostingClassifier'
+      y 'RandomForestClassifier'.
+    * with_feature_importances: Binario. Calcula la feature importances
+      vía shap-values. Construye el gráfico correspondiente.
+    * with_probability_density: Binario. Cálcula las probabilidades
+      predichas en el conjunto de testeo. Construye el gráfico correspondiente
+    * path: String. Ubicación de los archivos de data.
+    OUTPUT: Dataframe con la información relevante del modelo optimizado.
+    Se informan métricas de cross-validation y de testeo.
+    """  
     logging.info('PROCESO DE ENTRENAMIENTO Y GUARDADO DE MODELO.')
     # Configuraciones Generales ###############################################
     logging.info('CONFIGURACIÓN DE DATA.')
@@ -420,10 +440,6 @@ def training_model(best_hyper_info=None,
                                     float_names=float_names,
                                     categorical_names=categorical_names)
     estimator = select_model(model_name=model_name)
-    # transform = Pipeline(steps=[("processing", preprocessor),
-    #                            ("RandomUnderSampler", RandomUnderSampler(random_state=seed,
-    #                                                                      sampling_strategy=ratio_balance)),
-    #                            ("estimator", estimator())])
 
     # Ajuste Final ###########################################################
     logging.info('AJUSTE FINAL.')
