@@ -13,6 +13,7 @@ import yaml
 from sklearn.impute import KNNImputer
 from sklearn.metrics import recall_score, precision_score
 from sklearn.metrics import f1_score, matthews_corrcoef, confusion_matrix
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -105,9 +106,9 @@ def hyper_space(model_name=None,
     if model_name == 'HistGradientBoostingClassifier':
         space = {'estimator__random_state': [random_state],
                  'estimator__max_iter': [100, 400],
-                 'estimator__max_leaf_nodes': [10, 20],
-                 'estimator__min_samples_leaf': [10, 20],
-                 'estimator__learning_rate': [0.1, 0.03],
+                 'estimator__max_leaf_nodes': [10],
+                 'estimator__min_samples_leaf': [10],
+                 'estimator__learning_rate': [0.1],
                  'estimator__max_depth': [None, 1],
                  'estimator__l2_regularization': [0]}
     elif model_name == 'RandomForestClassifier':
@@ -259,7 +260,8 @@ def optimization_model(name_train_sav=None,
     """
     Desarrolla una búsqueda de la mejor combinación de hiperparámetros,
     dado un estimador. Sus parámetros son:
-    * original_data: Arvhivo .csv resultante del script "workshop.py".
+    * name_train_sav: Nombre del archivo .sav de entrenamiento.
+    * name_test_sav: Nombre del archivo .sav de prueba.
     * features_names: Lista de nombres de features a considerar.
     * model_name: String. Selección del nombre del estimador.
       Por el momento solo hay dos opciones, 'HistGradientBoostingClassifier'
@@ -279,50 +281,37 @@ def optimization_model(name_train_sav=None,
       la información de la mejor combinación de hiperparámetros.
     """
     logging.info('PROCESO DE OPTIMIZACIÓN.')
-    # Carga de datas #########################################################
-    # df_train = get_data(name_sav='wA_train.sav', path=path)
-    # df_test = get_data(name_sav='wA_test.sav', path=path)
     df_train = get_data(name_sav=name_train_sav, path=path)
     df_test = get_data(name_sav=name_test_sav, path=path)
     
     
     # Configuraciones Generales ##################################################
     logging.info('CONFIGURACIÓN GENERALES.')
-    # Se obtiene el dataset de features en el conjunto de __Entrenamiento__
-    original_data = get_data(name_sav=name_sav, path=path)
-    data = original_data[features_names]
+    # Se obtiene el dataset de features en el conjunto de Entrenamiento. 
+    original_data = df_train.copy()
+    data_features = original_data[features_names]
     
+    # Se obtienen los nombres de variables numéricas y de las categóricas.
+    float_names = list(data_features.select_dtypes(include='float64').columns)
+    categorical_names = list(data_features.select_dtypes(include='object').columns)
+   # int_names = list(data.select_dtypes(include='int').columns)
     
-    
-    
-    float_names = list(data.select_dtypes(include='float64').columns)
-    categorical_names = list(data.select_dtypes(include='object').columns)
-    # int_names = list(data.select_dtypes(include='int').columns)
-    feature_names_order = get_feature_names_order(model_name=model_name,
-                                                  float_names=float_names,
-                                                  categorical_names=categorical_names,
-                                                  int_names=None)
-    features = data[feature_names_order]
-    label = original_data[objective_name]
-
-    # Split data #############################################################
-    logging.info('SPLIT DATA.')
-    X_train, X_test, y_train, y_test = train_test_split(features,
-                                                        label,
-                                                        random_state=seed,
-                                                        test_size=test_size,
-                                                        stratify=label)
-
-    # Configuración de Métricas ###############################################
+    # Configuración de scores.
     scores = {'f1': 'f1',
-              'accuracy': 'accuracy',
-              'balanced_accuracy': 'balanced_accuracy',
               'precision': 'precision',
               'recall': 'recall',
-              'roc_auc': 'roc_auc',
-              'average_precision': 'average_precision',
-              'm_c': make_scorer(matthews_corrcoef),
-              'jaccard': 'jaccard'}
+              'm_c': make_scorer(matthews_corrcoef)}
+
+    # Se ordenan los nombres de variables.
+    feature_names_order = get_feature_names_order(model_name=model_name,
+                                                  float_names=float_names,
+                                                  categorical_names=categorical_names)
+    
+    # Split data #############################################################
+    X_train= data_features[feature_names_order]
+    y_train = original_data[objective_name]
+    X_test= df_test[feature_names_order]
+    y_test = df_test[objective_name]
 
     # Tuberías para Procesamiento y Muestreo ##################################
     logging.info('TUBERÍAS PARA PROCESAMIENTO Y MUESTREO.')
@@ -331,8 +320,8 @@ def optimization_model(name_train_sav=None,
                                     categorical_names=categorical_names)
     estimator = select_model(model_name=model_name)
     transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(
-                                    random_state=seed, sampling_strategy=ratio_balance)),
+                                ("RandomUnderSampler", RandomUnderSampler(random_state=seed,
+                                                                          sampling_strategy=ratio_balance)),
                                 ("estimator", estimator())])
 
     # Configuración para CV y Search #####################################
@@ -355,14 +344,9 @@ def optimization_model(name_train_sav=None,
     results = CV_model.cv_results_
     pd_results = pd.DataFrame({'hyperparameters': results['params'],
                                'cv_f1': results['mean_test_f1'],
-                               'cv_accuracy': results['mean_test_accuracy'],
-                               'cv_balanced_accuracy': results['mean_test_balanced_accuracy'],
                                'cv_precision': results['mean_test_precision'],
                                'cv_recall': results['mean_test_recall'],
-                               'cv_roc_auc': results['mean_test_roc_auc'],
-                               'cv_average_precision': results['mean_test_average_precision'],
                                'cv_m_c': results['mean_test_m_c'],
-                               'cv_jaccard': results['mean_test_jaccard'],
                                'optimization_date':  datetime.datetime.now()})
     pd_results['ratio_balance'] = ratio_balance
 
@@ -375,7 +359,6 @@ def optimization_model(name_train_sav=None,
     best_hyper = pd_results.loc[0, :]
     best_hyper['model_name'] = model_name
     best_hyper['k_folds'] = k_folds
-    best_hyper['test_size'] = test_size
 
     if save_best_info:
         # Guardado de archivos #########################################
@@ -389,40 +372,47 @@ def optimization_model(name_train_sav=None,
 
 
 def training_model(best_hyper_info=None,
-                   name_sav=None,
+                   name_train_sav=None,
+                   name_test_sav=None,
                    features_names=None,
                    objective_name=None,
                    with_feature_importances=None,
                    with_probability_density=None,
-                   save_data_train_test=None,
                    path=None):
     logging.info('PROCESO DE ENTRENAMIENTO Y GUARDADO DE MODELO.')
-    # Configuración de data ###############################################
+    # Configuraciones Generales ###############################################
     logging.info('CONFIGURACIÓN DE DATA.')
+    df_train = get_data(name_sav=name_train_sav, path=path)
+    df_test = get_data(name_sav=name_test_sav, path=path)   
     seed = best_hyper_info['hyperparameters']['random_state']
     ratio_balance = best_hyper_info['ratio_balance']
     model_name = best_hyper_info['model_name']
-    test_size = best_hyper_info['test_size']
-    original_data = get_data(name_sav=name_sav, path=path)
-    data = original_data[features_names]
-    float_names = list(data.select_dtypes(include='float64').columns)
-    categorical_names = list(data.select_dtypes(include='object').columns)
-    int_names = list(data.select_dtypes(include='int').columns)
+
+    # Se obtiene el dataset de features en el conjunto de Entrenamiento. 
+    original_data = df_train.copy()
+    data_features = original_data[features_names]
+
+    # Se obtienen los nombres de variables numéricas y de las categóricas.
+    float_names = list(data_features.select_dtypes(include='float64').columns)
+    categorical_names = list(data_features.select_dtypes(include='object').columns)
+    # int_names = list(data.select_dtypes(include='int').columns)
+    
+    # Configuración de scores.
+    scores = {'f1': 'f1',
+              'precision': 'precision',
+              'recall': 'recall',
+              'm_c': make_scorer(matthews_corrcoef)}
+
+    # Se ordenan los nombres de variables.
     feature_names_order = get_feature_names_order(model_name=model_name,
                                                   float_names=float_names,
-                                                  categorical_names=categorical_names,
-                                                  int_names=int_names)
-    features = data[feature_names_order]
-    original_data['home_application_id']
-    label = original_data[objective_name]
-
-    # Split data ##########################################################
-    logging.info('SPLIT DATA.')
-    X_train, X_test, y_train, y_test = train_test_split(features,
-                                                        label,
-                                                        random_state=seed,
-                                                        test_size=test_size,
-                                                        stratify=label)
+                                                  categorical_names=categorical_names)
+    
+    # Split data #############################################################
+    X_train= data_features[feature_names_order]
+    y_train = original_data[objective_name]
+    X_test= df_test[feature_names_order]
+    y_test = df_test[objective_name] 
 
     # Tuberias para Procesamiento y Muestreo #############################
     logging.info('TUBERÍAS PARA PROCESAMIENTO Y MUESTREO.')
@@ -430,17 +420,17 @@ def training_model(best_hyper_info=None,
                                     float_names=float_names,
                                     categorical_names=categorical_names)
     estimator = select_model(model_name=model_name)
-    transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(
-                                    random_state=seed, sampling_strategy=ratio_balance)),
-                                ("estimator", estimator())])
+    # transform = Pipeline(steps=[("processing", preprocessor),
+    #                            ("RandomUnderSampler", RandomUnderSampler(random_state=seed,
+    #                                                                      sampling_strategy=ratio_balance)),
+    #                            ("estimator", estimator())])
 
     # Ajuste Final ###########################################################
     logging.info('AJUSTE FINAL.')
     best_param = best_hyper_info['hyperparameters']
     transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(
-                                    random_state=seed, sampling_strategy=ratio_balance)),
+                                ("RandomUnderSampler", RandomUnderSampler(random_state=seed,
+                                                                          sampling_strategy=ratio_balance)),
                                 ("estimator", estimator(**best_param))])
     clf = transform.fit(X_train, y_train)
     clf.score(X_test, y_test)
@@ -450,12 +440,9 @@ def training_model(best_hyper_info=None,
     recall = recall_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
     a_s = accuracy_score(y_test, y_pred)
-    a_p_s = average_precision_score(y_test, y_pred)
     f_1 = f1_score(y_test, y_pred)
     roc_auc = roc_auc_score(y_test, y_pred)
     m_c = matthews_corrcoef(y_test, y_pred)
-    j_c = jaccard_score(y_test, y_pred)
-    b_a = balanced_accuracy_score(y_test, y_pred)
     precision_maj = list(precision_score(y_test, y_pred, average=None))[0]
     recall_maj = list(recall_score(y_test, y_pred, average=None))[0]
 
@@ -463,12 +450,9 @@ def training_model(best_hyper_info=None,
     best_hyper_info['final_recall'] = recall
     best_hyper_info['final_precision'] = precision
     best_hyper_info['final_accuracy'] = a_s
-    best_hyper_info['final_average_precision'] = a_p_s
     best_hyper_info['final_f1_score'] = f_1
     best_hyper_info['final_roc_auc'] = roc_auc
     best_hyper_info['final_matthews_corrcoef'] = m_c
-    best_hyper_info['final_balanced_accuracy'] = b_a
-    best_hyper_info['final_jaccard_score'] = j_c
     best_hyper_info['final_recall_maj'] = recall_maj
     best_hyper_info['final_precision_maj'] = precision_maj
     best_hyper_info['train_date'] = datetime.datetime.now()
@@ -476,7 +460,7 @@ def training_model(best_hyper_info=None,
     save_name_best_info = f'final_model_info_{objective_name}_{ratio_balance}.sav'
     save_name = f'{path}{save_name_best_info}'
     pickle.dump(pd_best_info, open(save_name, 'wb'))
-    pickle.dump(clf, open(f'{path}screening_model.sav', 'wb'))
+    pickle.dump(clf, open(f'{path}rain_model.sav', 'wb'))
 
     if with_probability_density:
         logging.info('CONSTRUCCIÓN DE DENSIDAD DE PROBABILIDADES DE X_TEST.')
@@ -498,20 +482,6 @@ def training_model(best_hyper_info=None,
         name_feature_importances = f'final_feature_importances_{objective_name}_{ratio_balance}.sav'
         save_name = f'{path}{name_feature_importances}'
         pickle.dump(feature_importances, open(save_name, 'wb'))
-
-    if save_data_train_test:
-        logging.info('GUARDADO DE DATA TRAIN Y DATA TEST.')
-        con_train = pd.concat([X_train, y_train], axis=1)
-        merge_train = pd.merge(con_train, original_data['home_application_id'],
-                               left_index=True, right_index=True, how="left")
-
-        con_test = pd.concat([X_test, y_test], axis=1)
-        merge_test = pd.merge(con_test, original_data['home_application_id'],
-                              left_index=True, right_index=True, how="left")
-        save_name_train = f'{path}data_train.sav'
-        save_name_test = f'{path}data_test.sav'
-        pickle.dump(merge_train, open(save_name_train, 'wb'))
-        pickle.dump(merge_test, open(save_name_test, 'wb'))
 
     logging.info('FIN DE AJUSTE FINAL.')
 
