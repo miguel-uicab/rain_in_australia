@@ -33,19 +33,27 @@ El modelo de ML asociado es uno que trata un problema de clasificación binaria.
 
 Para entender las decisiones y procesos llevados a cabo para el desarrollo del modelo de ML, así como las características y métricas finales asociadas al mismo, hay que consultar los jupyter noteboks contenidos en las diferentes carpetas. El orden en que deben consultarse estos archivos son:
 
-1. __exploratory_and_preprocessing/exploratory_analysis_and_preprocessing.ipynb__: Se divide en dos partes (dos jupyter notebooks). En ellas se lleva a cabo un análisis exploratorio de datos además de una primera etapa de preprocesamiento. Entre los procesos que se realizan están: análisis de la correlación, tratamiento de valores perdidos, selección de variables y guardado de los binarios contenedores de las datas de entrenamiento y de prueba.
+1. __exploratory_and_preprocessing/exploratory_analysis_and_preprocessing.ipynb__: Se divide en dos partes (dos jupyter notebooks). En ellas se lleva a cabo un análisis exploratorio de datos además de una primera etapa de preprocesamiento. Entre los procesos que se realizan están: análisis de la correlación, tratamiento de valores perdidos, selección de variables y guardado de los binarios contenedores de las datas de entrenamiento y de testeo.
 
 2. __training/model_selection.ipynb :__ En él se lleva a cabo una minicompetencia de modelos. Contiene importantes explicaciones de las consideraciones técnicas asociadas al entreamiento de un modelo de clasificación con un considerable desbalanceo entre sus clases.
 
-3. __training/model_optimization.ipynb :__ Se generalizan prodecimientos llevados a cabo en la competencia de modelos y realiza la optimización del modelo ganador. 
+3. __training/model_optimization.ipynb :__ Se generalizan prodecimientos llevados a cabo en la competencia de modelos y realiza la optimización del modelo ganador.
+Tiene una versión en script llamada __model_optimization.py__, la cual es funcional pero aún falta por refinar. Este script puede ejecutarse de la siguiente manera desde consola:
+```
+python model_optimization.py
+```
 
 4. __training/final_training.ipynb :__ Se lleva a cabo el ajuste final del modelo optimizado y el guardado del archivo binario que lo contendrá.
+Tiene una versión en script llamada __final_training.py__, la cual es funcional pero aún falta por refinar. Este script puede ejecutarse de la siguiente manera desde consola:
+```
+python final_training.py
+```
 
-Cada notebook tiene asociado un script de python. Estos scripts contienen funciones necesarias que han sido construidas para no saturar el contenido de los notebooks. Cada una de estas funciones contiene una descripción de la labor que realizan.
+Cada notebook tiene asociado un script de python que contiene las funciones necesarias que han sido construidas para no saturar el contenido de los notebooks. Cada una de estas funciones contiene una descripción de la labor que realizan.
 
 
 ## __5. SOBRE LA FUNCIÓN DE PRONÓSTICO.__
-La __*función de pronóstico*__ está contenida en el script `prediction.py` en la carpeta __prediction/__. Esta función tiene como entrada una estructura `json` de la siguiente forma
+La __*función de pronóstico*__ está contenida en el script `prediction.py` en la carpeta __prediction/__. Esta función tiene como payload de entrada una estructura `json` de la siguiente forma
 ```
 { "Location": "Albury",
   "WindGustDir": "ENE",
@@ -74,7 +82,7 @@ donde:
 3. `version`: Es la versión del modelo.
 
 Para saber cómo hacer uso de está función, hay que consultar el juputer notebook
-__prediction/uso_de_la_funcion_prediccion.ipynb__.
+__prediction/uso_de_la_funcion_pronostico.ipynb__.
 
 ## __6. FUTURO DEL PROYECTO: DESPLIEGUE Y MONITOREO.__
 
