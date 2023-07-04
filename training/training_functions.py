@@ -30,8 +30,6 @@ logging.basicConfig(format=logging_format,
                     level=logging.INFO)
 
 
-# Funciones ###################################################################
-###############################################################################
 def get_config():
     """
     Se carga el archivo config.yaml.
@@ -105,12 +103,12 @@ def hyper_space(model_name=None,
     """
     if model_name == 'HistGradientBoostingClassifier':
         space = {'estimator__random_state': [random_state],
-            'estimator__max_iter': [200, 400],
-            'estimator__max_leaf_nodes': [10], 
-            'estimator__min_samples_leaf': [10, 20],
-            'estimator__learning_rate':  [0.5],
-            'estimator__max_depth': [None, 1],
-            'estimator__l2_regularization': [0]}
+                 'estimator__max_iter': [200, 400],
+                 'estimator__max_leaf_nodes': [10], 
+                 'estimator__min_samples_leaf': [10, 20],
+                 'estimator__learning_rate':  [0.5],
+                 'estimator__max_depth': [None, 1],
+                 'estimator__l2_regularization': [0]}
         # space = {'estimator__random_state': [random_state],
         #          'estimator__max_iter': [200, 400, 650, 700, 800],
         #          'estimator__max_leaf_nodes': [10, 70, 100, 150], 
@@ -441,7 +439,7 @@ def training_model(best_hyper_info=None,
     X_test= df_test[feature_names_order]
     y_test = df_test[objective_name] 
 
-    # Tuberias para Procesamiento y Muestreo #############################
+    # Tuberias para Procesamiento  #############################
     logging.info('TUBERÍAS PARA PROCESAMIENTO Y MUESTREO.')
     preprocessor = get_preprocessor(model_name=model_name,
                                     float_names=float_names,

@@ -28,7 +28,8 @@ def get_dataframe(json=None):
     return df_json
 
 
-def fillna_categoric_data(data=None, list_names=None):
+def fillna_categoric_data(data=None,
+                          list_names=None):
     """
     Dada una lista de variables categóricas, imputa, en los
     valores perdidos, el valor de 'No identificado'.
@@ -47,7 +48,7 @@ def get_feature_names_order(model_name=None,
     El uso de Pipilines implica que el orden de las variables importa.
     Este orden en las variables esta vínculado al orden en que suceden los
     procesos en las tuberías (ver función "get_preprocessor"
-    de trainin_functions.py)
+    de training_functions.py)
     * Orden de variables en el modelo HistGradientBoostingClassifier:
         1. Tipo categórica.
         2. Tipo float.
@@ -67,7 +68,8 @@ def get_feature_names_order(model_name=None,
     return feature_names_order
 
 
-def transform_data_type_to_float(data=None, list_names=None):
+def transform_data_type_to_float(data=None,
+                                 list_names=None):
     """
     Dada una lista de variables de interés, se tranforman
     a tipo float.

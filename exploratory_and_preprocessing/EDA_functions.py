@@ -18,7 +18,8 @@ def get_data(name_sav=None,
     return name_sav
 
 
-def get_count_missing(data=None, feature_names=None):
+def get_count_missing(data=None,
+                      feature_names=None):
     """
     Arroja un DataFrame con el conteo y el porcentaje de
     valores perdidos de cada variable float.
@@ -33,7 +34,8 @@ def get_count_missing(data=None, feature_names=None):
     return count_missing
 
 
-def remove_features_with_missing(count=None, threshold=None):
+def remove_features_with_missing(count=None,
+                                 threshold=None):
     """
     Devuelve una lista de variables cuyos porcentajes de valores perdidos
     no supera cierto umbral.
@@ -77,7 +79,8 @@ def get_features_names_drop_by_corr(data=None,
     return drop_by_corr
 
 
-def fillna_categoric_data(data=None, list_names=None):
+def fillna_categoric_data(data=None,
+                          list_names=None):
     """
     Dada una lista de variables categóricas, imputa, en los
     valores perdidos, el valor de 'Unidentified'.
