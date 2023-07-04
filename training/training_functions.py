@@ -105,12 +105,19 @@ def hyper_space(model_name=None,
     """
     if model_name == 'HistGradientBoostingClassifier':
         space = {'estimator__random_state': [random_state],
-                 'estimator__max_iter': [200, 400, 650, 700, 800],
-                 'estimator__max_leaf_nodes': [10, 70, 100, 150], 
-                 'estimator__min_samples_leaf': [10, 20, 30, 40],
-                 'estimator__learning_rate':  [0.05, 0.07, 0.1, 0.3, 0.5, 1],
-                 'estimator__max_depth': [None, 1],
-                 'estimator__l2_regularization': [0]}
+            'estimator__max_iter': [200, 400],
+            'estimator__max_leaf_nodes': [10], 
+            'estimator__min_samples_leaf': [10, 20],
+            'estimator__learning_rate':  [0.5],
+            'estimator__max_depth': [None, 1],
+            'estimator__l2_regularization': [0]}
+        # space = {'estimator__random_state': [random_state],
+        #          'estimator__max_iter': [200, 400, 650, 700, 800],
+        #          'estimator__max_leaf_nodes': [10, 70, 100, 150], 
+        #          'estimator__min_samples_leaf': [10, 20, 30, 40],
+        #          'estimator__learning_rate':  [0.05, 0.07, 0.1, 0.3, 0.5, 1],
+        #          'estimator__max_depth': [None, 1],
+        #          'estimator__l2_regularization': [0]}
     elif model_name == 'RandomForestClassifier':
         space = {'estimator__random_state': [random_state],
                  'estimator__n_estimators': [100, 150],
@@ -280,7 +287,7 @@ def optimization_model(name_train_sav=None,
     * save_best_info: Booleano. Si o no se guarda un archivo .sav que contiene
       la información de la mejor combinación de hiperparámetros.
     * path: String. Ubicación de los archivos de data.
-    OUTPUT: Dataframe con la información relevante del modelo que ha optimizado
+    OUTPUT: Panda-series con la información relevante del modelo que ha optimizado
     la métrica dada por optimized_metric.
     """
     logging.info('PROCESO DE OPTIMIZACIÓN.')
@@ -396,7 +403,7 @@ def training_model(best_hyper_info=None,
     * with_probability_density: Binario. Cálcula las probabilidades
       predichas en el conjunto de testeo. Construye el gráfico correspondiente
     * path: String. Ubicación de los archivos de data.
-    OUTPUT: Dataframe con la información relevante del modelo optimizado.
+    OUTPUT: Panda-series con la información relevante del modelo optimizado.
     Se informan métricas de cross-validation y de testeo.
     """  
     logging.info('PROCESO DE ENTRENAMIENTO Y GUARDADO DE MODELO.')
