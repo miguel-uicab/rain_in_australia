@@ -1,3 +1,17 @@
+variable_names: ['Location',
+                 'WindGustDir',
+                 'WindDir9am',
+                 'WindDir3pm',
+                 'RainToday',
+                 'MinTemp',
+                 'Rainfall',
+                 'WindGustSpeed',
+                 'WindSpeed3pm',
+                 'Humidity9am',
+                 'Humidity3pm',
+                 'Pressure9am',
+                 'Date']
+
 features_names:  ['Location',
                   'MinTemp',
                   'Rainfall',
