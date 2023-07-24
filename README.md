@@ -84,13 +84,52 @@ donde:
 Para saber cómo hacer uso de está función, hay que consultar el juputer notebook
 __prediction/uso_de_la_funcion_pronostico.ipynb__.
 
-## __6. FUTURO DEL PROYECTO: DESPLIEGUE Y MONITOREO.__
+
+## __7. USO DE LA APP__
+
+### Correr la app de manera local
+Para hacer uso de la app de manera local, puede hacer desde la carpeta contenedora de la aplicación y correr el siguiente código:
+
+```
+python python main.py
+```
+
+Para probarla, puede hacer uso de postman de la siguiente manera:
+1. Ingresar el endpoint (`http://0.0.0.0:8000`) y seleccionar __POST__.
+
+![pos1](images/app1.png)
+
+2. Seleccionar __Body__, luego __raw__ y luego __JSON__. Ingresar un ejemplo de payload (uno se exhibe en la sección 5.)
+
+![pos2](images/app2.png)
+
+3. Seleccionar __SEND__.
+
+![pos3](images/app3.png)
+
+Se debe esperar recibir una respuesta del estilo siguiente:
+
+![pos4](images/app4.png)
+
+### Contenerización de la app
+
+Para construir una imagen usando docker, se puede correr lo siguiente:
+```
+docker build -t rain_in_australia_app .   
+```
+
+Se puede correr la app, ahora ya en un contendor, usando lo siguiente:
+```
+docker run -p 8000:8000 rain_in_australia_app 
+```
+
+## __6. FUTURO DEL PROYECTO: DESPLIEGUE DE LA APLICACIÓN Y MONITOREO.__
 
 Queda pendiente la construcción de infraestructura necesaria para llegar a cumplir a cabalidad el objetivo último del proyecto: la escalabilidad de la __*función de pronóstico*__. Esta escalabilidad conlleva el despliegue del modelo y su monitoreo.
 
 En cuanto al monitoreo, se refiera a tener bajo vigilancia los cambios que se tienen en la distribución de los datos a través del tiempo (__drift__), tanto en las features como en la variable objetivo. Cualquier cambio significativo debe dar lugar a una revisión del modelo, para su actualización o sustitución, pues este cambio puede afectar negativamente el rendimiento del modelo en producción. Para hacer esto, se puede recurrir a herramientas como [evently](https://github.com/evidentlyai/evidently).
 
-El despliegue se puede hacer de manera rápida con lo siguiente. Usando frameworks como *FastAPI* con el fin de construir la api. Una vez hecho esto, se puede acceder a herramientas como *AWS Elastic Beanstalk* para tener un endpoint que permita el consumo de la aplicacón. *AWS Elastic Beanstalk* permite desplegar usando solo un archivo `.zip` que contiene la aplicación y sus requerimientos.
+El despliegue se puede hacer de manera rápida usando por ejemplo *AWS Elastic Beanstalk* para tener un endpoint que permita el consumo de la aplicacón de manera general. *AWS Elastic Beanstalk* permite desplegar usando solo un archivo `.zip` que contiene la aplicación y sus requerimientos.
 
 Sin embargo, para añadir procedimientos de CI/CD (integración y despliegue  continuos) habrá que recurrir a una combinación más sofisticada de herramientas que permitan el dinamismo y versionado necesarios. Esto se puede alcanzar usando, por ejemplo:
 1. *Docker*: para construir un contenedor de la api.
