@@ -18,7 +18,7 @@ app = FastAPI(title='Prediction Rain in Australia',
 # Función de predicción ######################################################
 @app.post("/predict")
 def predict(json_dict: Json_Dict,
-            path='../outputs/'):
+            path='./'):
     """ 
     Toma como entrada una estructura json con la features
     necesarias para la predicción.
