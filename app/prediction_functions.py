@@ -12,19 +12,20 @@ class Json_Dict(BaseModel):
     """
     Variables needed for prediction.
     """
-    Location: str
-    WindGustDir: str
+    Location: Optional[str] = None
+    WindGustDir: Optional[str] = None
     WindDir9am: Optional[str] = None
-    WindDir3pm: str
-    RainToday: str
-    MinTemp: float
-    Rainfall: float
-    WindGustSpeed: float
-    WindSpeed3pm: float
-    Humidity9am: float
-    Humidity3pm: float
-    Pressure9am: float
-    Date: str
+    WindDir3pm: Optional[str] = None
+    RainToday: Optional[str] = None
+    MinTemp: Optional[float] = None
+    Rainfall: Optional[float] = None
+    WindGustSpeed: Optional[float] = None
+    WindSpeed3pm: Optional[float] = None
+    Humidity9am: Optional[float] = None
+    Humidity3pm: Optional[float] = None
+    Pressure9am: Optional[float] = None
+    Date: Optional[str] = None
+
 
 def get_config():
     """

@@ -26,6 +26,10 @@ Las 5 carpetas son:
 3. __outputs/:__ Contiene los archivos binarios resultantes de los procesos de preprocesamiento de data y ajuste final modelo. Además, contiene gráficos informativos en formato `html`. De entre todos los archivos, el binario contenedor del modelo de ML es `rain_model.sav`.
 4. __training/:__ Contiene los archivos necesarios para el entrenamiento, optimización, y guardado del modelo.
 5. __prediction/:__ Contiene los archivos necesarios para poner en marcha la __*función de pronostico*__.
+6. __app/:__ Contiene los archivos necesarios para poder usar la __*función de pronostico*__ a treavés de una app usando FastAPI.
+7. __frontend/:__ Contiene los archivos necesarios para poder acceder a una visualización de la aplicación web que hace uso de la app usando Streamlit.
+8. __images/:__ Contiene imagenes necesarias.
+
 
 ## __4. SOBRE EL MODELO DE MACHINE LEARNING.__
 
@@ -85,10 +89,10 @@ Para saber cómo hacer uso de está función, hay que consultar el juputer noteb
 __prediction/uso_de_la_funcion_pronostico.ipynb__.
 
 
-## __7. USO DE LA APP__
+## __6. USO DE LA APP__
 
 ### Correr la app de manera local
-Para hacer uso de la app de manera local, puede hacer desde la carpeta contenedora de la aplicación y correr el siguiente código:
+Para hacer uso de la app de manera local, se puede hacer desde la carpeta __app/:__ y correr el siguiente código:
 
 ```
 python python main.py
@@ -123,7 +127,33 @@ Se puede correr la app, ahora ya en un contendor, usando lo siguiente:
 docker run -p 8000:8000 rain_in_australia_app 
 ```
 
-## __6. FUTURO DEL PROYECTO: DESPLIEGUE DE LA APLICACIÓN Y MONITOREO.__
+## __7. PROTOTIPO DE LA APLICACIÓN WEB__
+
+### Para visualizar de maner local
+Para tener una idea del frontend que servirá la app, previo a que esta ya haya sido corrida (ver sección 6.), se puede corres una aplicación Streamlit de la sigueinte manera.
+
+```
+streamlit run streamlit-app.py
+```
+
+Al hacerlo, se podrá ver un frontend como sigue:
+
+![stream1](images/stream1.png)
+![stream1](images/stream2.png)
+
+### Contenerización de la app Streamlit
+
+Para construir una imagen usando docker, se puede correr lo siguiente:
+```
+docker build -t rain_in_australia_streamlit_app . 
+```
+
+Se puede correr la app, ahora ya en un contendor, usando lo siguiente:
+```
+docker run -p 8501:8501 rain_in_australia_streamlit_app
+```
+
+## __8. FUTURO DEL PROYECTO: DESPLIEGUE DE LA APLICACIÓN Y MONITOREO.__
 
 Queda pendiente la construcción de infraestructura necesaria para llegar a cumplir a cabalidad el objetivo último del proyecto: la escalabilidad de la __*función de pronóstico*__. Esta escalabilidad conlleva el despliegue del modelo y su monitoreo.
 
