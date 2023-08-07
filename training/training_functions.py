@@ -4,13 +4,15 @@
 import pandas as pd
 import numpy as np
 import pickle
+import plotly.graph_objects as go
 import plotly.express as px
 import plotly.figure_factory as ff
 import shap
 import datetime
 import logging
 import yaml
-from sklearn.impute import KNNImputer
+from sklearn.impute import KNNImputer, SimpleImputer
+from sklearn.metrics import precision_recall_curve, auc
 from sklearn.metrics import recall_score, precision_score
 from sklearn.metrics import f1_score, matthews_corrcoef, confusion_matrix
 from sklearn.metrics import accuracy_score, roc_auc_score
@@ -20,6 +22,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.compose import ColumnTransformer
+from sklearn.calibration import calibration_curve
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline
 from category_encoders.count import CountEncoder
@@ -145,15 +148,24 @@ def get_preprocessor(model_name=None,
     Ver función "get_feature_names_order" para saber cómo queda el
     orden de estas variables de acuerdo el modelo de machine learning elegido.
     """
-    numeric_transformer = Pipeline(steps=[('imputer', KNNImputer(n_neighbors=3, weights="uniform"))])
-    categorical_transformer = Pipeline(steps=[('CountEncoder', CountEncoder(normalize=True))])
+    # numeric_transformer = Pipeline(steps=[('imputer', KNNImputer(n_neighbors=3, weights="uniform"))])
+    numeric_transformer = Pipeline(steps=[('imputer',
+                                           SimpleImputer(strategy='median'))])
+    categorical_transformer = Pipeline(steps=[('CountEncoder',
+                                               CountEncoder(normalize=True))])
     if model_name == 'HistGradientBoostingClassifier':
         preprocessor = ColumnTransformer(remainder='passthrough',
-                                         transformers=[('categorical', categorical_transformer, categorical_names)])
+                                         transformers=[('categorical',
+                                                        categorical_transformer,
+                                                        categorical_names)])
     else:
         preprocessor = ColumnTransformer(remainder='passthrough',
-                                         transformers=[('numeric', numeric_transformer, float_names),
-                                                       ('categorical', categorical_transformer, categorical_names)])
+                                         transformers=[('numeric',
+                                                        numeric_transformer,
+                                                        float_names),
+                                                       ('categorical',
+                                                        categorical_transformer,
+                                                        categorical_names)])
 
     return preprocessor
 
@@ -188,6 +200,9 @@ def get_feature_importances(model_name=None,
             pd_f_i = abs(pd_shape).mean().to_frame()
             pd_f_i.reset_index(drop=False, inplace=True)
             pd_f_i.columns = ['feature_names', 'feature_importances']
+        pickle.dump(x_Test, open(f'{path}x_Test.sav', 'wb'))
+        pickle.dump(explainer, open(f'{path}explainer.sav', 'wb'))
+        pickle.dump(shap_test, open(f'{path}shap_test.sav', 'wb'))
     else:
         feature_importances = list(
             clf_final._final_estimator.feature_importances_)
@@ -291,19 +306,19 @@ def optimization_model(name_train_sav=None,
     logging.info('PROCESO DE OPTIMIZACIÓN.')
     df_train = get_data(name_sav=name_train_sav, path=path)
     df_test = get_data(name_sav=name_test_sav, path=path)
-    
-    
+
+
     # Configuraciones Generales ##################################################
     logging.info('CONFIGURACIÓN GENERALES.')
     # Se obtiene el dataset de features en el conjunto de Entrenamiento. 
     original_data = df_train.copy()
     data_features = original_data[features_names]
-    
+
     # Se obtienen los nombres de variables numéricas y de las categóricas.
     float_names = list(data_features.select_dtypes(include='float64').columns)
     categorical_names = list(data_features.select_dtypes(include='object').columns)
-   # int_names = list(data.select_dtypes(include='int').columns)
-    
+    # int_names = list(data.select_dtypes(include='int').columns)
+
     # Configuración de scores.
     scores = {'f1': 'f1',
               'precision': 'precision',
@@ -314,11 +329,11 @@ def optimization_model(name_train_sav=None,
     feature_names_order = get_feature_names_order(model_name=model_name,
                                                   float_names=float_names,
                                                   categorical_names=categorical_names)
-    
+
     # Split data #############################################################
-    X_train= data_features[feature_names_order]
+    X_train = data_features[feature_names_order]
     y_train = original_data[objective_name]
-    X_test= df_test[feature_names_order]
+    X_test = df_test[feature_names_order]
     y_test = df_test[objective_name]
 
     # Tuberías para Procesamiento y Muestreo ##################################
@@ -327,10 +342,13 @@ def optimization_model(name_train_sav=None,
                                     float_names=float_names,
                                     categorical_names=categorical_names)
     estimator = select_model(model_name=model_name)
-    transform = Pipeline(steps=[("processing", preprocessor),
-                                ("RandomUnderSampler", RandomUnderSampler(random_state=seed,
-                                                                          sampling_strategy=ratio_balance)),
-                                ("estimator", estimator())])
+    transform = Pipeline(steps=[('processing', 
+                                  preprocessor),
+                                ('RandomUnderSampler',
+                                  RandomUnderSampler(random_state=seed,
+                                                     sampling_strategy=ratio_balance)),
+                                ('estimator',
+                                  estimator())])
 
     # Configuración para CV y Search #####################################
     logging.info('CONFIGURACIÓN PARA CV Y SEARCH.')
@@ -421,7 +439,7 @@ def training_model(best_hyper_info=None,
     float_names = list(data_features.select_dtypes(include='float64').columns)
     categorical_names = list(data_features.select_dtypes(include='object').columns)
     # int_names = list(data.select_dtypes(include='int').columns)
-    
+
     # Configuración de scores.
     scores = {'f1': 'f1',
               'precision': 'precision',
@@ -432,11 +450,11 @@ def training_model(best_hyper_info=None,
     feature_names_order = get_feature_names_order(model_name=model_name,
                                                   float_names=float_names,
                                                   categorical_names=categorical_names)
-    
+
     # Split data #############################################################
     X_train= data_features[feature_names_order]
     y_train = original_data[objective_name]
-    X_test= df_test[feature_names_order]
+    X_test = df_test[feature_names_order]
     y_test = df_test[objective_name] 
 
     # Tuberias para Procesamiento  #############################
@@ -482,6 +500,10 @@ def training_model(best_hyper_info=None,
     save_name = f'{path}{save_name_best_info}'
     pickle.dump(pd_best_info, open(save_name, 'wb'))
     pickle.dump(clf, open(f'{path}rain_model.sav', 'wb'))
+    pickle.dump(X_test, open(f'{path}X_test.sav', 'wb'))
+    pickle.dump(y_test, open(f'{path}y_test.sav', 'wb'))
+    pickle.dump(X_train, open(f'{path}X_train.sav', 'wb'))
+    pickle.dump(y_train, open(f'{path}y_train.sav', 'wb'))
 
     if with_probability_density:
         logging.info('CONSTRUCCIÓN DE DENSIDAD DE PROBABILIDADES DE X_TEST.')
@@ -497,8 +519,10 @@ def training_model(best_hyper_info=None,
         logging.info('OBTENCIÓN DE FEATURE IMPORTANCES.')
         feature_importances = get_feature_importances(model_name=model_name,
                                                       feature_names_order=feature_names_order,
-                                                      clf_final=clf, X_test=X_test,
-                                                      path=path, objective_name=objective_name,
+                                                      clf_final=clf,
+                                                      X_test=X_test,
+                                                      path=path,
+                                                      objective_name=objective_name,
                                                       ratio_balance=ratio_balance)
         name_feature_importances = f'final_feature_importances_{objective_name}_{ratio_balance}.sav'
         save_name = f'{path}{name_feature_importances}'
@@ -507,3 +531,38 @@ def training_model(best_hyper_info=None,
     logging.info('FIN DE AJUSTE FINAL.')
 
     return best_hyper_info
+
+
+def get_calibration_curve(y_test,
+                          probs_test):
+    """
+    Se construye curva de calibración.
+    """
+    fop, mpv = calibration_curve(y_test,
+                                 probs_test,
+                                 n_bins=50,
+                                 normalize=True)
+    fig = go.Figure(data=go.Scatter(x=mpv,
+                                    y=fop,
+                                    mode='lines+markers'))
+    fig.add_shape(type='line',
+                  line=dict(dash='dash'),
+                  x0=0,
+                  x1=1,
+                  y0=0,
+                  y1=1)
+    fig.update_layout(title='Calibration Test',
+                      xaxis_title='Mean Predicted Probability in each bin',
+                      yaxis_title='Ratio of positives')
+    fig.update_yaxes(scaleanchor="x",
+                     scaleratio=1)
+    fig.update_xaxes(constrain='domain')
+    fig.update_traces(marker=dict(size=5,
+                                  line=dict(width=2,
+                                            color='gray')),
+                      line=dict(width=1,
+                                color='orange'))
+    fig.update_traces(marker=dict(size=6, color='gray'),
+                      line=dict(width=1,
+                                color='orange'))
+    fig.show()
